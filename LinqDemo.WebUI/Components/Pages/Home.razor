@@ -4,13 +4,12 @@
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app. I found @customers.Count() customers!
+<h1>@customers.Count() customers!</h1>
 
 <button @onclick=refresh>Refresh</button>
 <button @onclick=action1>Action 1</button>
 <button @onclick=action2>Action 2</button>
+<br />
 <br />
 <input @bind-value=FilterValue @bind-value:event=oninput placeholder="search value" />
 
@@ -54,6 +53,7 @@ Welcome to your new app. I found @customers.Count() customers!
         customers = dataProvider.LoadCustomers();
         StateHasChanged();
     }
+
     void action1()
     {
         customers = from c in customers
@@ -62,14 +62,13 @@ Welcome to your new app. I found @customers.Count() customers!
                     select c;
         StateHasChanged();
     }
+    
     void action2()
     {
         refresh();
         customers = customers.Where(c => c.State != null);
     }
 
-    private bool loading;
-    private bool queued;
     private string filterValue;
     public string FilterValue
     {
@@ -79,39 +78,12 @@ Welcome to your new app. I found @customers.Count() customers!
             if (value != filterValue)
             {
                 filterValue = value;
-                InvokeAsync(async () => await SearchAsync(filterValue));
-            }
-        }
-    }
-
-    private async Task SearchAsync(string text)
-    {
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            if (loading)
-            {
-                queued = true;
-                return;
-            }
-
-            do
-            {
-                loading = true;
-                queued = false;
                 refresh();
                 customers = from c in customers
-                            where c.FirstName.Contains(text) ||
-                                c.LastName.Contains(text)
+                            where c.FirstName.Contains(filterValue) ||
+                                c.LastName.Contains(filterValue)
                             select c;
-
-                loading = false;
             }
-            while (queued);
-            await InvokeAsync(StateHasChanged);
-        }
-        else
-        {
-            refresh();
         }
     }
 }
