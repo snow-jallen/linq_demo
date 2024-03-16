@@ -1,0 +1,117 @@
+﻿@page "/"
+@using LinqDemo.Persistence
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+<PageTitle>Home</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app. I found @customers.Count() customers!
+
+<button @onclick=refresh>Refresh</button>
+<button @onclick=action1>Action 1</button>
+<button @onclick=action2>Action 2</button>
+<br />
+<input @bind-value=FilterValue @bind-value:event=oninput placeholder="search value" />
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Company</th>
+            <th>Address</th>
+            <th>City</th>
+            <th>State</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach(var c in customers)
+        {
+            <tr>
+                <td>@c.FirstName</td>
+                <td>@c.LastName</td>
+                <td>@c.Company</td>
+                <td>@c.Address</td>
+                <td>@c.City</td>
+                <td>@c.State</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    IEnumerable<Customer> customers;
+    IDataProvider dataProvider;
+    protected override void OnInitialized()
+    {
+        dataProvider = new SqliteDataProvider("../chinook.db");
+        refresh();
+    }
+
+    void refresh()
+    {
+        customers = dataProvider.LoadCustomers();
+        StateHasChanged();
+    }
+    void action1()
+    {
+        customers = from c in customers
+                    where c.FirstName.StartsWith("L") || c.FirstName.Length > 6
+                    orderby c.LastName
+                    select c;
+        StateHasChanged();
+    }
+    void action2()
+    {
+        refresh();
+        customers = customers.Where(c => c.State != null);
+    }
+
+    private bool loading;
+    private bool queued;
+    private string filterValue;
+    public string FilterValue
+    {
+        get => filterValue;
+        set
+        {
+            if (value != filterValue)
+            {
+                filterValue = value;
+                InvokeAsync(async () => await SearchAsync(filterValue));
+            }
+        }
+    }
+
+    private async Task SearchAsync(string text)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            if (loading)
+            {
+                queued = true;
+                return;
+            }
+
+            do
+            {
+                loading = true;
+                queued = false;
+                refresh();
+                customers = from c in customers
+                            where c.FirstName.Contains(text) ||
+                                c.LastName.Contains(text)
+                            select c;
+
+                loading = false;
+            }
+            while (queued);
+            await InvokeAsync(StateHasChanged);
+        }
+        else
+        {
+            refresh();
+        }
+    }
+}
