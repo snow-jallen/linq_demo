@@ -19,9 +19,12 @@
             <th>First Name</th>
             <th>Last Name</th>
             <th>Company</th>
+            <th>Country</th>
             <th>Address</th>
             <th>City</th>
             <th>State</th>
+            <th>Phone</th>
+            <th>Email</th>
         </tr>
     </thead>
     <tbody>
@@ -31,9 +34,12 @@
                 <td>@c.FirstName</td>
                 <td>@c.LastName</td>
                 <td>@c.Company</td>
+                <td>@c.Country</td>
                 <td>@c.Address</td>
                 <td>@c.City</td>
                 <td>@c.State</td>
+                <td>@c.Phone</td>
+                <td>@c.Email</td>
             </tr>
         }
     </tbody>
@@ -62,11 +68,11 @@
                     select c;
         StateHasChanged();
     }
-    
+
     void action2()
     {
         refresh();
-        customers = customers.Where(c => c.State != null);
+        customers = customers.OrderBy(c => c.Country);
     }
 
     private string filterValue;
